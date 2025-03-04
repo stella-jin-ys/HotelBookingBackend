@@ -3,6 +3,12 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HotelBookingSystem.Models
 {
+    public enum BookingStatus
+    {
+        Pending,
+        Confirmed,
+        Cancelled
+    }
     public class Booking
     {
         [Key]
@@ -23,12 +29,8 @@ namespace HotelBookingSystem.Models
         public DateTime CheckOutDate { get; set; }
 
         public DateTime BookingDate { get; set; } = DateTime.Now;
-
-        [StringLength(50)]
-        public string? Status { get; set; } = "Pending";
-
-        [Column(TypeName = "decimal(10, 2)")]
-        public decimal TotalPrice { get; set; }
+        [Required]
+        public BookingStatus Status { get; set; } = BookingStatus.Pending;
 
         // Navigation properties
         [ForeignKey("CustomerID")]
@@ -36,7 +38,9 @@ namespace HotelBookingSystem.Models
 
         [ForeignKey("RoomID")]
         public Room? Room { get; set; }
-
+        public decimal TotalPrice => Room != null
+                   ? (CheckOutDate - CheckInDate).Days * Room.PricePerNight
+                   : 0;
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }
 }

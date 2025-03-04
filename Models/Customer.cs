@@ -22,12 +22,6 @@ namespace HotelBookingSystem.Models
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
 
-        [StringLength(20)]
-        public string? Phone { get; set; }
-
-        [StringLength(255)]
-        public string? Address { get; set; }
-
         // Navigation property
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
     }

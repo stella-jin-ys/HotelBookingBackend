@@ -63,24 +63,14 @@ namespace HotelBookingDb.Data
                 Name = "Grand Hotel",
                 Address = "123 Main Street",
                 City = "New York",
-                State = "NY",
-                ZipCode = "10001",
                 Country = "Usa",
-                Phone = "212-555-1234",
-                Email = "info@grandhotel.com",
-                Website = "_blank"
             },
             new Hotel
             {
                 Name = "Seaside Resort",
                 Address = "456 Ocean Drive",
                 City = "Miami",
-                State = "FL",
-                ZipCode = "33139",
                 Country= "Usa",
-                Phone = "305-555-6789",
-                Email = "contact@seasideresort.com",
-                Website = "_blank"
             }
         };
                 context.Hotels.AddRange(hotels);
@@ -128,16 +118,12 @@ namespace HotelBookingDb.Data
                 FirstName = "John",
                 LastName = "Doe",
                 Email = "john.doe@example.com",
-                Phone = "555-123-4567",
-                Address = "789 Pine St"
             },
             new Customer
             {
                 FirstName = "Jane",
                 LastName = "Smith",
                 Email = "jane.smith@example.com",
-                Phone = "555-987-6543",
-                Address = "321 Maple Ave"
             }
         };
                 context.Customers.AddRange(customers);
@@ -154,8 +140,7 @@ namespace HotelBookingDb.Data
                 CheckInDate = DateTime.Now.AddDays(30),
                 CheckOutDate = DateTime.Now.AddDays(35),
                 BookingDate = DateTime.Now,
-                Status = "Confirmed",
-                TotalPrice = rooms[0].PricePerNight * 5 // 5 nights
+                Status = BookingStatus.Confirmed,
             },
             new Booking
             {
@@ -164,8 +149,7 @@ namespace HotelBookingDb.Data
                 CheckInDate = DateTime.Now.AddDays(45),
                 CheckOutDate = DateTime.Now.AddDays(50),
                 BookingDate = DateTime.Now.AddDays(-5),
-                Status = "Confirmed",
-                TotalPrice = rooms[2].PricePerNight * 5 // 5 nights
+                Status = BookingStatus.Confirmed,
             }
         };
                 context.Bookings.AddRange(bookings);

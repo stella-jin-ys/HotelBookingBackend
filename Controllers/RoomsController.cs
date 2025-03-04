@@ -2,6 +2,7 @@ using HotelBookingSystem.Models;
 using HotelBookingDb.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NuGet.Protocol.Core.Types;
 
 namespace HotelBookingBackend.Controllers
 {
@@ -18,14 +19,27 @@ namespace HotelBookingBackend.Controllers
 
         // GET: api/Rooms
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Room>>> GetRooms()
+        public async Task<ActionResult<IEnumerable<RoomDto>>> GetRooms()
         {
-            return await _context.Rooms.ToListAsync();
+            var rooms = await _context.Rooms.ToListAsync();
+
+            var roomDtos = rooms.Select(r => new RoomDto
+            {
+                RoomID = r.RoomID,
+                HotelID = r.HotelID,
+                RoomNumber = r.RoomNumber,
+                RoomType = r.RoomType,
+                Capacity = r.Capacity,
+                PricePerNight = r.PricePerNight,
+                Description = r.Description
+            }).ToList();
+
+            return Ok(roomDtos);
         }
 
         // GET: api/Rooms/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Room>> GetRoom(int id)
+        public async Task<ActionResult<RoomDto>> GetRoom(int id)
         {
             var room = await _context.Rooms.FindAsync(id);
 
@@ -33,20 +47,38 @@ namespace HotelBookingBackend.Controllers
             {
                 return NotFound();
             }
-
-            return room;
+            var roomDto = new RoomDto
+            {
+                RoomID = room.RoomID,
+                HotelID = room.HotelID,
+                RoomNumber = room.RoomNumber,
+                RoomType = room.RoomType,
+                Capacity = room.Capacity,
+                PricePerNight = room.PricePerNight,
+                Description = room.Description
+            };
+            return Ok(roomDto);
         }
 
         // PUT: api/Rooms/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutRoom(int id, Room room)
+        public async Task<IActionResult> PutRoom(int id, RoomDto roomDto)
         {
-            if (id != room.RoomID)
+            if (id != roomDto.RoomID)
             {
                 return BadRequest();
             }
+            var room = await _context.Rooms.FindAsync(id);
+            if (room == null)
+            {
+                return NotFound();
+            }
 
-            _context.Entry(room).State = EntityState.Modified;
+            room.RoomNumber = roomDto.RoomNumber;
+            room.RoomType = roomDto.RoomType;
+            room.Capacity = roomDto.Capacity;
+            room.PricePerNight = roomDto.PricePerNight;
+            room.Description = roomDto.Description;
 
             try
             {
@@ -69,12 +101,33 @@ namespace HotelBookingBackend.Controllers
 
         // POST: api/Rooms
         [HttpPost]
-        public async Task<ActionResult<Room>> PostRoom(Room room)
+        public async Task<ActionResult<RoomDto>> PostRoom(RoomDto roomDto)
         {
+            var room = new Room
+            {
+                HotelID = roomDto.HotelID,
+                RoomNumber = roomDto.RoomNumber,
+                RoomType = roomDto.RoomType,
+                Capacity = roomDto.Capacity,
+                PricePerNight = roomDto.PricePerNight,
+                Description = roomDto.Description,
+            };
+
             _context.Rooms.Add(room);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetRoom", new { id = room.RoomID }, room);
+            var createdRoomDto = new RoomDto
+            {
+                RoomID = room.RoomID,
+                HotelID = room.HotelID,
+                RoomNumber = room.RoomNumber,
+                RoomType = room.RoomType,
+                Capacity = room.Capacity,
+                PricePerNight = room.PricePerNight,
+                Description = room.Description
+            };
+
+            return CreatedAtAction(nameof(GetRoom), new { id = room.RoomID }, createdRoomDto);
         }
 
         // DELETE: api/Rooms/5

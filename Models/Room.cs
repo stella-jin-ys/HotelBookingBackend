@@ -16,14 +16,14 @@ namespace HotelBookingSystem.Models
         public string RoomNumber { get; set; } = string.Empty;
 
         [StringLength(50)]
-        public string? RoomType { get; set; }
+        public string RoomType { get; set; }
 
-        public int? Capacity { get; set; }
+        public int Capacity { get; set; }
 
         [Column(TypeName = "decimal(10, 2)")]
         public decimal PricePerNight { get; set; }
 
-        public string? Description { get; set; }
+        public string Description { get; set; }
 
         // Navigation properties
         [ForeignKey("HotelID")]

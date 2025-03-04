@@ -18,9 +18,17 @@ namespace HotelBookingBackend.Controllers
 
         // GET: api/Customers
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Customer>>> GetCustomers()
+        public async Task<ActionResult<IEnumerable<CustomerDto>>> GetCustomers()
         {
-            return await _context.Customers.ToListAsync();
+            var customers = await _context.Customers.ToListAsync();
+            var customerDtos = customers.Select(c => new CustomerDto
+            {
+                CustomerID = c.CustomerID,
+                FirstName = c.FirstName,
+                LastName = c.LastName,
+                Email = c.Email,
+            }).ToList();
+            return Ok(customerDtos);
         }
 
         // GET: api/Customers/5
@@ -34,17 +42,35 @@ namespace HotelBookingBackend.Controllers
                 return NotFound();
             }
 
-            return customer;
+            var customerDto = new CustomerDto
+            {
+                CustomerID = customer.CustomerID,
+                FirstName = customer.FirstName,
+                LastName = customer.LastName,
+                Email = customer.Email
+            };
+
+            return Ok(customerDto);
         }
 
         // PUT: api/Customers/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutCustomer(int id, Customer customer)
+        public async Task<IActionResult> PutCustomer(int id, CustomerDto customerDto)
         {
-            if (id != customer.CustomerID)
+            if (id != customerDto.CustomerID)
             {
                 return BadRequest();
             }
+
+            var customer = await _context.Customers.FindAsync(id);
+            if (customer == null)
+            {
+                return NotFound();
+            }
+
+            customer.FirstName = customerDto.FirstName;
+            customer.LastName = customerDto.LastName;
+            customer.Email = customerDto.Email;
 
             _context.Entry(customer).State = EntityState.Modified;
 
@@ -69,12 +95,19 @@ namespace HotelBookingBackend.Controllers
 
         // POST: api/Customers
         [HttpPost]
-        public async Task<ActionResult<Customer>> PostCustomer(Customer customer)
+        public async Task<ActionResult<CustomerDto>> PostCustomer(CustomerDto customerDto)
         {
+            var customer = new Customer
+            {
+                FirstName = customerDto.FirstName,
+                LastName = customerDto.LastName,
+                Email = customerDto.Email
+            };
+
             _context.Customers.Add(customer);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetCustomer", new { id = customer.CustomerID }, customer);
+            return CreatedAtAction("GetCustomer", new { id = customer.CustomerID }, customerDto);
         }
 
         // DELETE: api/Customers/5
