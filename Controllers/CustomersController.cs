@@ -20,22 +20,33 @@ namespace HotelBookingBackend.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CustomerDto>>> GetCustomers()
         {
-            var customers = await _context.Customers.ToListAsync();
+            var customers = await _context.Customers.Include(c => c.Bookings).ToListAsync();
             var customerDtos = customers.Select(c => new CustomerDto
             {
                 CustomerID = c.CustomerID,
                 FirstName = c.FirstName,
                 LastName = c.LastName,
                 Email = c.Email,
+                Bookings = c.Bookings?.Select(b => new BookingDto
+                {
+                    BookingID = b.BookingID,
+                    CustomerID = b.CustomerID,
+                    RoomID = b.RoomID,
+                    CheckInDate = b.CheckInDate,
+                    CheckOutDate = b.CheckOutDate,
+                    Status = b.Status,
+                    TotalPrice = b.TotalPrice
+
+                }).ToList()
             }).ToList();
             return Ok(customerDtos);
         }
 
         // GET: api/Customers/5
         [HttpGet("{id}")]
-        public async Task<ActionResult<Customer>> GetCustomer(int id)
+        public async Task<ActionResult<CustomerDto>> GetCustomer(int id)
         {
-            var customer = await _context.Customers.FindAsync(id);
+            var customer = await _context.Customers.Include(c => c.Bookings).FirstOrDefaultAsync(c => c.CustomerID == id);
 
             if (customer == null)
             {
@@ -47,7 +58,17 @@ namespace HotelBookingBackend.Controllers
                 CustomerID = customer.CustomerID,
                 FirstName = customer.FirstName,
                 LastName = customer.LastName,
-                Email = customer.Email
+                Email = customer.Email,
+                Bookings = customer.Bookings?.Select(b => new BookingDto
+                {
+                    BookingID = b.BookingID,
+                    CustomerID = b.CustomerID,
+                    RoomID = b.RoomID,
+                    CheckInDate = b.CheckInDate,
+                    CheckOutDate = b.CheckOutDate,
+                    Status = b.Status,
+                    TotalPrice = b.TotalPrice
+                }).ToList()
             };
 
             return Ok(customerDto);
