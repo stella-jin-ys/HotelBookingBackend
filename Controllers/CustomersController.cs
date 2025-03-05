@@ -36,7 +36,6 @@ namespace HotelBookingBackend.Controllers
                     CheckOutDate = b.CheckOutDate,
                     Status = b.Status,
                     TotalPrice = b.TotalPrice
-
                 }).ToList()
             }).ToList();
             return Ok(customerDtos);

@@ -30,8 +30,8 @@ namespace HotelBookingDb.Controllers
                 BookingID = b.BookingID,
                 CustomerID = b.CustomerID,
                 RoomID = b.RoomID,
-                CheckInDate = b.CheckInDate,
-                CheckOutDate = b.CheckOutDate,
+                CheckInDate = b.CheckInDate.Date,
+                CheckOutDate = b.CheckOutDate.Date,
                 TotalPrice = b.TotalPrice,
                 Status = b.Status
             }).ToList();
@@ -56,9 +56,9 @@ namespace HotelBookingDb.Controllers
                 BookingID = booking.BookingID,
                 CustomerID = booking.CustomerID,
                 RoomID = booking.RoomID,
-                CheckInDate = booking.CheckInDate,
-                CheckOutDate = booking.CheckOutDate,
-                TotalPrice = (booking.CheckOutDate - booking.CheckInDate).Days * (booking.Room?.PricePerNight ?? 0),
+                CheckInDate = booking.CheckInDate.Date,
+                CheckOutDate = booking.CheckOutDate.Date,
+                TotalPrice = booking.TotalPrice,
                 Status = booking.Status
             };
         }
@@ -67,28 +67,33 @@ namespace HotelBookingDb.Controllers
         [HttpPost]
         public async Task<ActionResult<BookingDto>> PostBooking(BookingDto bookingDto)
         {
-            // Check if the room is available for the given dates
-            bool isRoomAvailable = !_context.Bookings.Any(b =>
-                b.RoomID == bookingDto.RoomID &&
-                ((bookingDto.CheckInDate >= b.CheckInDate && bookingDto.CheckInDate < b.CheckOutDate) ||
-                (bookingDto.CheckOutDate > b.CheckInDate && bookingDto.CheckOutDate <= b.CheckOutDate) ||
-                (bookingDto.CheckInDate <= b.CheckInDate && bookingDto.CheckOutDate >= b.CheckOutDate)));
+            var room = await _context.Rooms.FindAsync(bookingDto.RoomID);
+            if (room == null)
+            {
+                return BadRequest("Room not found.");
+            }
 
+            bool isRoomAvailable = !_context.Bookings.Any(b => b.RoomID == bookingDto.RoomID && ((bookingDto.CheckInDate >= b.CheckInDate && bookingDto.CheckInDate < b.CheckOutDate) || (bookingDto.CheckOutDate > b.CheckInDate && bookingDto.CheckOutDate <= b.CheckOutDate) || (bookingDto.CheckInDate <= b.CheckInDate && bookingDto.CheckOutDate >= b.CheckOutDate))
+            );
             if (!isRoomAvailable)
             {
-                return BadRequest("The room is not available for the selected dates.");
+                return BadRequest("The room is not available fro the seleted dates.");
             }
 
             var newBooking = new Booking
             {
                 CustomerID = bookingDto.CustomerID,
                 RoomID = bookingDto.RoomID,
-                CheckInDate = bookingDto.CheckInDate,
-                CheckOutDate = bookingDto.CheckOutDate,
-                Status = bookingDto.Status
+                CheckInDate = bookingDto.CheckInDate.Date,
+                CheckOutDate = bookingDto.CheckOutDate.Date,
+                Status = bookingDto.Status,
+                TotalPrice = (bookingDto.CheckOutDate - bookingDto.CheckInDate).Days * room.PricePerNight
             };
 
             _context.Bookings.Add(newBooking);
+            room.Available = false;
+            _context.Rooms.Update(room);
+
             await _context.SaveChangesAsync();
 
             bookingDto.BookingID = newBooking.BookingID;
@@ -101,34 +106,28 @@ namespace HotelBookingDb.Controllers
         {
             if (id != bookingDto.BookingID)
             {
-                return BadRequest();
-            }
-
-            // Ensure the room is still available
-            bool isRoomAvailable = !_context.Bookings.Any(b =>
-                b.RoomID == bookingDto.RoomID &&
-                b.BookingID != id &&
-                ((bookingDto.CheckInDate >= b.CheckInDate && bookingDto.CheckInDate < b.CheckOutDate) ||
-                (bookingDto.CheckOutDate > b.CheckInDate && bookingDto.CheckOutDate <= b.CheckOutDate) ||
-                (bookingDto.CheckInDate <= b.CheckInDate && bookingDto.CheckOutDate >= b.CheckOutDate)));
-
-            if (!isRoomAvailable)
-            {
-                return BadRequest("The room is not available for the updated dates.");
+                return BadRequest("Booking ID mismatch.");
             }
 
             var bookingToUpdate = await _context.Bookings.FindAsync(id);
             if (bookingToUpdate == null)
             {
-                return NotFound();
+                return NotFound("Booking not found.");
             }
 
-            // Update properties
+            bool isRoomAvailable = !_context.Bookings.Any(b => b.RoomID == bookingDto.
+            RoomID && b.BookingID != id && ((bookingDto.CheckInDate >= b.CheckInDate && bookingDto.CheckInDate < b.CheckOutDate) || (bookingDto.CheckOutDate > b.CheckInDate && bookingDto.CheckOutDate <= b.CheckOutDate) || (bookingDto.CheckInDate <= b.CheckInDate && bookingDto.CheckOutDate >= b.CheckOutDate)));
+
+            if (!isRoomAvailable)
+            {
+                return BadRequest("The room is not available for the updated dates.");
+            }
             bookingToUpdate.CustomerID = bookingDto.CustomerID;
             bookingToUpdate.RoomID = bookingDto.RoomID;
-            bookingToUpdate.CheckInDate = bookingDto.CheckInDate;
-            bookingToUpdate.CheckOutDate = bookingDto.CheckOutDate;
+            bookingToUpdate.CheckInDate = bookingDto.CheckInDate.Date;
+            bookingToUpdate.CheckOutDate = bookingDto.CheckOutDate.Date;
             bookingToUpdate.Status = bookingDto.Status;
+            bookingToUpdate.TotalPrice = (bookingDto.CheckOutDate - bookingDto.CheckInDate).Days * (_context.Rooms.FirstOrDefault(r => r.RoomID == bookingDto.RoomID)?.PricePerNight ?? 0);
 
             _context.Entry(bookingToUpdate).State = EntityState.Modified;
             await _context.SaveChangesAsync();
@@ -146,7 +145,16 @@ namespace HotelBookingDb.Controllers
             {
                 return NotFound();
             }
-
+            var room = await _context.Rooms.FindAsync(booking.RoomID);
+            if (room != null)
+            {
+                bool hasOtherBookings = _context.Bookings.Any(b => b.RoomID == room.RoomID && b.BookingID != id);
+                if (!hasOtherBookings)
+                {
+                    room.Available = true;
+                    _context.Rooms.Update(room);
+                }
+            }
             _context.Bookings.Remove(booking);
             await _context.SaveChangesAsync();
 

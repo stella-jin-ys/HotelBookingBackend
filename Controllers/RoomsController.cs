@@ -19,22 +19,22 @@ namespace HotelBookingBackend.Controllers
 
         // GET: api/Rooms
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<RoomDto>>> GetRooms()
+        public async Task<ActionResult<IEnumerable<RoomDto>>> GetRooms(bool onlyAvailable = false)
         {
-            var rooms = await _context.Rooms.ToListAsync();
+            var query = _context.Rooms.AsQueryable();
+            if (onlyAvailable)
+            {
+                query = query.Where(r => r.Available);
+            }
+            var rooms = await query.ToListAsync();
 
-            var roomDtos = rooms.Select(r => new RoomDto
+            return Ok(rooms.Select(r => new RoomDto
             {
                 RoomID = r.RoomID,
-                HotelID = r.HotelID,
                 RoomNumber = r.RoomNumber,
-                RoomType = r.RoomType,
-                Capacity = r.Capacity,
                 PricePerNight = r.PricePerNight,
-                Description = r.Description
-            }).ToList();
-
-            return Ok(roomDtos);
+                Available = r.Available
+            }));
         }
 
         // GET: api/Rooms/5

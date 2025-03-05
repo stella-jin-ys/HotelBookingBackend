@@ -31,6 +31,7 @@ namespace HotelBookingSystem.Models
         public DateTime BookingDate { get; set; } = DateTime.Now;
         [Required]
         public BookingStatus Status { get; set; } = BookingStatus.Pending;
+        public decimal TotalPrice { get; set; }
 
         // Navigation properties
         [ForeignKey("CustomerID")]
@@ -38,9 +39,7 @@ namespace HotelBookingSystem.Models
 
         [ForeignKey("RoomID")]
         public Room? Room { get; set; }
-        public decimal TotalPrice => Room != null
-                   ? (CheckOutDate - CheckInDate).Days * Room.PricePerNight
-                   : 0;
+
         public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }
 }

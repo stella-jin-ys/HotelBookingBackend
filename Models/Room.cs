@@ -22,6 +22,7 @@ namespace HotelBookingSystem.Models
 
         [Column(TypeName = "decimal(10, 2)")]
         public decimal PricePerNight { get; set; }
+        public bool Available { get; set; } = true;
 
         public string Description { get; set; }
 
