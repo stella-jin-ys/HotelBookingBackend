@@ -14,9 +14,9 @@ namespace HotelBookingSystem.Models
         [Required]
         [StringLength(50)]
         public string RoomNumber { get; set; } = string.Empty;
-
+        [Required]
         [StringLength(50)]
-        public string RoomType { get; set; }
+        public required string RoomType { get; set; }
 
         public int Capacity { get; set; }
 
@@ -24,7 +24,7 @@ namespace HotelBookingSystem.Models
         public decimal PricePerNight { get; set; }
         public bool Available { get; set; } = true;
 
-        public string Description { get; set; }
+        public required string Description { get; set; }
 
         // Navigation properties
         [ForeignKey("HotelID")]

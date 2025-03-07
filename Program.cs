@@ -28,6 +28,7 @@ public class Program
         });
         builder.Services.AddEndpointsApiExplorer();
         builder.Services.AddSwaggerGen();
+        builder.Services.AddHostedService<RoomAvailabilityService>();
 
         builder.WebHost.UseUrls("http://localhost:5247");
         var app = builder.Build();

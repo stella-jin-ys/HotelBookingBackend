@@ -35,9 +35,11 @@ namespace HotelBookingBackend.Controllers
                     RoomType = r.RoomType,
                     Capacity = r.Capacity,
                     PricePerNight = r.PricePerNight,
-                    Description = r.Description
+                    Description = r.Description,
+                    Available = r.Available
                 }).ToList()
             }).ToListAsync();
+
             return Ok(hotels);
         }
 
@@ -66,7 +68,8 @@ namespace HotelBookingBackend.Controllers
                     RoomType = r.RoomType,
                     Capacity = r.Capacity,
                     PricePerNight = r.PricePerNight,
-                    Description = r.Description
+                    Description = r.Description,
+                    Available = r.Available
                 }).ToList()
             };
             return Ok(hotelDto);

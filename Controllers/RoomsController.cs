@@ -33,7 +33,9 @@ namespace HotelBookingBackend.Controllers
                 RoomID = r.RoomID,
                 RoomNumber = r.RoomNumber,
                 PricePerNight = r.PricePerNight,
-                Available = r.Available
+                Available = r.Available,
+                RoomType = r.RoomType,
+                Description = r.Description
             }));
         }
 
@@ -79,6 +81,7 @@ namespace HotelBookingBackend.Controllers
             room.Capacity = roomDto.Capacity;
             room.PricePerNight = roomDto.PricePerNight;
             room.Description = roomDto.Description;
+            room.Available = roomDto.Available;
 
             try
             {
@@ -111,6 +114,7 @@ namespace HotelBookingBackend.Controllers
                 Capacity = roomDto.Capacity,
                 PricePerNight = roomDto.PricePerNight,
                 Description = roomDto.Description,
+                Available = roomDto.Available,
             };
 
             _context.Rooms.Add(room);
@@ -124,7 +128,8 @@ namespace HotelBookingBackend.Controllers
                 RoomType = room.RoomType,
                 Capacity = room.Capacity,
                 PricePerNight = room.PricePerNight,
-                Description = room.Description
+                Description = room.Description,
+                Available = room.Available
             };
 
             return CreatedAtAction(nameof(GetRoom), new { id = room.RoomID }, createdRoomDto);

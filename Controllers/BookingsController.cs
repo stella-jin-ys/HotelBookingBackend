@@ -67,17 +67,24 @@ namespace HotelBookingDb.Controllers
         [HttpPost]
         public async Task<ActionResult<BookingDto>> PostBooking(BookingDto bookingDto)
         {
+            if (bookingDto.CheckInDate < DateTime.Today)
+            {
+                return BadRequest("Check-in date cannot be earlier than today.");
+            }
+            if (bookingDto.CheckOutDate <= bookingDto.CheckInDate)
+            {
+                return BadRequest("Check-out date must be later than check-in date.");
+            }
             var room = await _context.Rooms.FindAsync(bookingDto.RoomID);
             if (room == null)
             {
                 return BadRequest("Room not found.");
             }
-
             bool isRoomAvailable = !_context.Bookings.Any(b => b.RoomID == bookingDto.RoomID && ((bookingDto.CheckInDate >= b.CheckInDate && bookingDto.CheckInDate < b.CheckOutDate) || (bookingDto.CheckOutDate > b.CheckInDate && bookingDto.CheckOutDate <= b.CheckOutDate) || (bookingDto.CheckInDate <= b.CheckInDate && bookingDto.CheckOutDate >= b.CheckOutDate))
             );
             if (!isRoomAvailable)
             {
-                return BadRequest("The room is not available fro the seleted dates.");
+                return BadRequest("The room is not available from the selected dates.");
             }
 
             var newBooking = new Booking
@@ -113,6 +120,10 @@ namespace HotelBookingDb.Controllers
             if (bookingToUpdate == null)
             {
                 return NotFound("Booking not found.");
+            }
+            if (bookingDto.CheckOutDate <= bookingDto.CheckInDate)
+            {
+                return BadRequest("Check-out date must be later than check-in date.");
             }
 
             bool isRoomAvailable = !_context.Bookings.Any(b => b.RoomID == bookingDto.
