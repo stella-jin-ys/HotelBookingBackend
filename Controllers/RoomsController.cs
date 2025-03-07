@@ -31,6 +31,8 @@ namespace HotelBookingBackend.Controllers
             return Ok(rooms.Select(r => new RoomDto
             {
                 RoomID = r.RoomID,
+                HotelID = r.HotelID,
+                Capacity = r.Capacity,
                 RoomNumber = r.RoomNumber,
                 PricePerNight = r.PricePerNight,
                 Available = r.Available,
@@ -43,23 +45,24 @@ namespace HotelBookingBackend.Controllers
         [HttpGet("{id}")]
         public async Task<ActionResult<RoomDto>> GetRoom(int id)
         {
-            var room = await _context.Rooms.FindAsync(id);
+            var room = await _context.Rooms.Where(r => r.RoomID == id).Select(r => new RoomDto
+            {
+                RoomID = r.RoomID,
+                HotelID = r.HotelID,
+                RoomNumber = r.RoomNumber,
+                RoomType = r.RoomType,
+                Capacity = r.Capacity,
+                PricePerNight = r.PricePerNight,
+                Description = r.Description,
+                Available = r.Available
+            }).FirstOrDefaultAsync();
 
             if (room == null)
             {
                 return NotFound();
             }
-            var roomDto = new RoomDto
-            {
-                RoomID = room.RoomID,
-                HotelID = room.HotelID,
-                RoomNumber = room.RoomNumber,
-                RoomType = room.RoomType,
-                Capacity = room.Capacity,
-                PricePerNight = room.PricePerNight,
-                Description = room.Description
-            };
-            return Ok(roomDto);
+
+            return Ok(room);
         }
 
         // PUT: api/Rooms/5
