@@ -18,16 +18,30 @@ namespace HotelBookingBackend.Controllers
 
         // GET: api/Hotels
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<HotelDto>>> GetHotels()
+        public async Task<ActionResult<IEnumerable<HotelDto>>> GetHotels(
+            [FromQuery] string? city,
+            [FromQuery] DateTime? checkInDate,
+            [FromQuery] DateTime? checkOutDate,
+            [FromQuery] int? guest
+        )
         {
-            var hotels = await _context.Hotels.Include(h => h.Rooms).Select(h => new HotelDto
+            var query = _context.Hotels.Include(h => h.Rooms).AsQueryable();
+            if (!string.IsNullOrEmpty(city))
+            {
+                query = query.Where(h => h.City.ToLower().Contains(city.ToLower()));
+            }
+            if (checkInDate.HasValue && checkOutDate.HasValue)
+            {
+                query = query.Where(h => h.Rooms.Any(r => r.Available && r.Capacity >= guest && !_context.Bookings.Any(b => b.CheckInDate <= checkOutDate && b.CheckOutDate >= checkInDate)));
+            }
+            var hotels = await query.Select(h => new HotelDto
             {
                 HotelID = h.HotelID,
                 Name = h.Name,
                 Address = h.Address,
                 City = h.City,
                 Country = h.Country,
-                Rooms = h.Rooms.Select(r => new RoomDto
+                Rooms = h.Rooms.Where(r => r.Available && r.Capacity >= guest && !_context.Bookings.Any(b => b.RoomID == r.RoomID && b.CheckOutDate >= DateTime.UtcNow)).Select(r => new RoomDto
                 {
                     RoomID = r.RoomID,
                     HotelID = r.HotelID,
@@ -42,6 +56,7 @@ namespace HotelBookingBackend.Controllers
 
             return Ok(hotels);
         }
+
 
         // GET: api/Hotels/5
         [HttpGet("{id}")]
