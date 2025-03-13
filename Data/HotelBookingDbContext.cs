@@ -118,12 +118,14 @@ namespace HotelBookingDb.Data
                 FirstName = "John",
                 LastName = "Doe",
                 Email = "john.doe@example.com",
+                Password="123456!"
             },
             new Customer
             {
                 FirstName = "Jane",
                 LastName = "Smith",
                 Email = "jane.smith@example.com",
+                Password="987654!"
             }
         };
                 context.Customers.AddRange(customers);

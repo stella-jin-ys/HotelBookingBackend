@@ -21,12 +21,13 @@ namespace HotelBookingBackend.Controllers
         public async Task<ActionResult<IEnumerable<CustomerDto>>> GetCustomers()
         {
             var customers = await _context.Customers.Include(c => c.Bookings).ToListAsync();
-            var customerDtos = customers.Select(c => new CustomerDto
+            var customerDto = customers.Select(c => new CustomerDto
             {
                 CustomerID = c.CustomerID,
                 FirstName = c.FirstName,
                 LastName = c.LastName,
                 Email = c.Email,
+                Password = c.Password,
                 Bookings = c.Bookings?.Select(b => new BookingDto
                 {
                     BookingID = b.BookingID,
@@ -38,7 +39,7 @@ namespace HotelBookingBackend.Controllers
                     TotalPrice = b.TotalPrice
                 }).ToList()
             }).ToList();
-            return Ok(customerDtos);
+            return Ok(customerDto);
         }
 
         // GET: api/Customers/5
@@ -58,6 +59,7 @@ namespace HotelBookingBackend.Controllers
                 FirstName = customer.FirstName,
                 LastName = customer.LastName,
                 Email = customer.Email,
+                Password = customer.Password,
                 Bookings = customer.Bookings?.Select(b => new BookingDto
                 {
                     BookingID = b.BookingID,
@@ -121,7 +123,8 @@ namespace HotelBookingBackend.Controllers
             {
                 FirstName = customerDto.FirstName,
                 LastName = customerDto.LastName,
-                Email = customerDto.Email
+                Email = customerDto.Email,
+                Password = customerDto.Password,
             };
 
             _context.Customers.Add(customer);

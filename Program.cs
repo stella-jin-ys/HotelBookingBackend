@@ -1,6 +1,6 @@
 using HotelBookingDb.Data;
 using Microsoft.EntityFrameworkCore;
-
+using Stripe;
 
 public class Program
 {
@@ -30,8 +30,13 @@ public class Program
         builder.Services.AddSwaggerGen();
         builder.Services.AddHostedService<RoomAvailabilityService>();
 
+
+        StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
         builder.WebHost.UseUrls("http://localhost:5247");
         var app = builder.Build();
+
+
 
         // Add this block to seed the database
         using (var scope = app.Services.CreateScope())

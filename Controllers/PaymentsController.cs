@@ -1,101 +1,73 @@
-using HotelBookingSystem.Models;
 using HotelBookingDb.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
+using Stripe;
+using Stripe.Checkout;
+using System.Collections.Generic;
 
-namespace HotelBookingBackend.Controllers
+[Route("api/payment")]
+[ApiController]
+public class PaymentsController : ControllerBase
 {
-    [Route("api/[controller]")]
-    [ApiController]
-    public class PaymentsController : ControllerBase
+    private readonly IConfiguration _configuration;
+    private readonly HotelBookingDbContext _context;
+    public PaymentsController(IConfiguration configuration, HotelBookingDbContext context)
     {
-        private readonly HotelBookingDbContext _context;
+        _configuration = configuration;
+        _context = context;
+    }
 
-        public PaymentsController(HotelBookingDbContext context)
+    [HttpPost("create-checkout-session/{bookingID}")]
+    public async Task<IActionResult> CreateCheckoutSession(int bookingID)
+    {
+        StripeConfiguration.ApiKey = _configuration["Stripe:SecretKey"];
+
+        var booking = await _context.Bookings.FindAsync(bookingID);
+        if (booking == null)
         {
-            _context = context;
+            return NotFound(new { message = "Booking not found" });
         }
+        long totalPriceCents = (long)(booking.TotalPrice * 100);
 
-        // GET: api/Payments
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<Payment>>> GetPayments()
+
+        var domain = "http://localhost:3000";
+        var options = new SessionCreateOptions
         {
-            return await _context.Payments.ToListAsync();
-        }
-
-        // GET: api/Payments/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Payment>> GetPayment(int id)
-        {
-            var payment = await _context.Payments.FindAsync(id);
-
-            if (payment == null)
+            UiMode = "embedded",
+            LineItems = new List<SessionLineItemOptions>
+{
+    new SessionLineItemOptions
             {
-                return NotFound();
-            }
+                PriceData= new SessionLineItemPriceDataOptions{
+                    Currency="sek",
+                    ProductData=new SessionLineItemPriceDataProductDataOptions{
+Name = "Hotel Booking ID: " + bookingID
+                    },
+                    UnitAmount = totalPriceCents,
+                },
+                Quantity = 1,
+            },
+},
+            Mode = "payment",
+            ReturnUrl = domain + "/Hotels",
+        };
+        var service = new SessionService();
+        Session session = await service.CreateAsync(options);
 
-            return payment;
-        }
+        return Ok(new { clientSecret = session.ClientSecret });
+    }
 
-        // PUT: api/Payments/5
-        [HttpPut("{id}")]
-        public async Task<IActionResult> PutPayment(int id, Payment payment)
-        {
-            if (id != payment.PaymentID)
-            {
-                return BadRequest();
-            }
+}
 
-            _context.Entry(payment).State = EntityState.Modified;
+[Route("session-status")]
+[ApiController]
+public class SessionStatusController : Controller
+{
+    [HttpGet]
+    public ActionResult SessionStatus([FromQuery] string session_id)
+    {
+        var sessionService = new SessionService();
+        Session session = sessionService.Get(session_id);
 
-            try
-            {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                if (!PaymentExists(id))
-                {
-                    return NotFound();
-                }
-                else
-                {
-                    throw;
-                }
-            }
-
-            return NoContent();
-        }
-
-        // POST: api/Payments
-        [HttpPost]
-        public async Task<ActionResult<Payment>> PostPayment(Payment payment)
-        {
-            _context.Payments.Add(payment);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction("GetPayment", new { id = payment.PaymentID }, payment);
-        }
-
-        // DELETE: api/Payments/5
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeletePayment(int id)
-        {
-            var payment = await _context.Payments.FindAsync(id);
-            if (payment == null)
-            {
-                return NotFound();
-            }
-
-            _context.Payments.Remove(payment);
-            await _context.SaveChangesAsync();
-
-            return NoContent();
-        }
-
-        private bool PaymentExists(int id)
-        {
-            return _context.Payments.Any(e => e.PaymentID == id);
-        }
+        return Json(new { status = session.Status, customer_email = session.CustomerDetails.Email });
     }
 }

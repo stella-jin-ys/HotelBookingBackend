@@ -23,7 +23,7 @@ namespace HotelBookingSystem.Models
         public string Email { get; set; } = string.Empty;
         [Required]
         [StringLength(150)]
-        public string Password { get; set; }
+        public required string Password { get; set; }
 
         // Navigation property
         public ICollection<Booking> Bookings { get; set; } = new List<Booking>();
