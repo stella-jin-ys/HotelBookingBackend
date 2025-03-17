@@ -5,5 +5,6 @@ public class HotelDto
     public string Address { get; set; }
     public string City { get; set; }
     public string Country { get; set; }
+    public string ImageUrl { get; set; }
     public List<RoomDto> Rooms { get; set; } = new();
 }

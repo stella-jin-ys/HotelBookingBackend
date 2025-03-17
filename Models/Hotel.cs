@@ -20,6 +20,7 @@ namespace HotelBookingSystem.Models
 
         [StringLength(100)]
         public string Country { get; set; }
+        public string ImageUrl { get; set; }
 
         // Navigation property
         public ICollection<Room> Rooms { get; set; } = new List<Room>();

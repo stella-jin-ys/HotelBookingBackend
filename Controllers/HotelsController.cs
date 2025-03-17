@@ -41,6 +41,7 @@ namespace HotelBookingBackend.Controllers
                 Address = h.Address,
                 City = h.City,
                 Country = h.Country,
+                ImageUrl = h.ImageUrl,
                 Rooms = h.Rooms.Where(r => r.Available && r.Capacity >= guest && !_context.Bookings.Any(b => b.RoomID == r.RoomID && b.CheckOutDate >= DateTime.UtcNow)).Select(r => new RoomDto
                 {
                     RoomID = r.RoomID,
@@ -51,6 +52,7 @@ namespace HotelBookingBackend.Controllers
                     PricePerNight = r.PricePerNight,
                     Description = r.Description,
                     Available = r.Available
+
                 }).ToList()
             }).ToListAsync();
 
@@ -75,6 +77,7 @@ namespace HotelBookingBackend.Controllers
                 Address = hotel.Address,
                 City = hotel.City,
                 Country = hotel.Country,
+                ImageUrl = hotel.ImageUrl,
                 Rooms = hotel.Rooms.Select(r => new RoomDto
                 {
                     RoomID = r.RoomID,
@@ -109,6 +112,7 @@ namespace HotelBookingBackend.Controllers
             hotel.Address = hotelDto.Address;
             hotel.City = hotelDto.City;
             hotel.Country = hotelDto.Country;
+            hotel.ImageUrl = hotelDto.ImageUrl;
 
             try
             {
@@ -139,6 +143,7 @@ namespace HotelBookingBackend.Controllers
                 Address = hotelDto.Address,
                 City = hotelDto.City,
                 Country = hotelDto.Country,
+                ImageUrl = hotelDto.ImageUrl,
             };
 
             _context.Hotels.Add(hotel);
@@ -150,7 +155,8 @@ namespace HotelBookingBackend.Controllers
                 Name = hotel.Name,
                 Address = hotel.Address,
                 City = hotel.City,
-                Country = hotel.Country
+                Country = hotel.Country,
+                ImageUrl = hotel.ImageUrl,
             };
 
             return CreatedAtAction(nameof(GetHotel), new { id = hotel.HotelID }, createdHotelDto);
